@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTS Gasal Matematika - MTs Kepadangan Clapar</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        :root { --primary: #047857; --primary-hover: #065f46; --secondary: #f3f4f6; --text-dark: #1f2937; --text-light: #6b7280; --white: #ffffff; --answered: #10b981; --active: #3b82f6; --unanswered: #d1d5db; --danger: #ef4444; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body { background-color: #f9fafb; color: var(--text-dark); }
+        header { background-color: var(--primary); color: var(--white); padding: 1rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header-title h1 { font-size: 1.2rem; font-weight: bold; }
+        .header-title p { font-size: 0.9rem; opacity: 0.9; }
+        #timer-display { font-size: 1.25rem; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; }
+        .timer-warning { color: #fca5a5 !important; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--white); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
+        .btn { display: inline-block; background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        #exam-section { display: none; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }
+        @media (max-width: 768px) { #exam-section { grid-template-columns: 1fr; } #sidebar { order: -1; margin-bottom: 1rem; } }
+        .nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .nav-btn { padding: 0.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 6px; background: var(--unanswered); cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .nav-btn.answered { background: var(--answered); color: var(--white); border-color: var(--answered); }
+        .nav-btn.active { background: var(--active); color: var(--white); border-color: var(--active); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .question-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--secondary); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+        .question-text { font-size: 1.15rem; line-height: 1.6; margin-bottom: 1.5rem; user-select: text; }
+        .options-container { display: flex; flex-direction: column; gap: 1rem; }
+        .option-label { display: flex; align-items: center; padding: 1rem; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background: var(--secondary); }
+        .option-label input { margin-right: 1rem; width: 1.2rem; height: 1.2rem; cursor: pointer; }
+        .option-label.selected { border-color: var(--primary); background: #ecfdf5; }
+        .matching-row { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; padding: 1rem; background: var(--secondary); border-radius: 8px; }
+        .matching-row select { padding: 0.5rem; border-radius: 6px; border: 1px solid #d1d5db; font-size: 1rem; }
+        .bottom-nav { display: flex; justify-content: space-between; margin-top: 2rem; border-top: 2px solid var(--secondary); padding-top: 1.5rem; }
+        .warning-text { color: var(--danger); font-size: 0.9rem; font-weight: bold; text-align: right; margin-top: 0.5rem; display: none; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { background: var(--white); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+        .modal-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        .btn-outline { background: transparent; color: var(--text-dark); border: 1px solid #d1d5db; }
+        #success-section { display: none; text-align: center; padding: 4rem 1rem; }
+    </style>
+</head>
+<body oncontextmenu="return false;"> <!-- Mencegah Klik Kanan -->
+
+    <header>
+        <div class="header-title">
+            <h1>ASTS Gasal Matematika</h1>
+            <p>Kelas IX – MTs Kepadangan Clapar</p>
+        </div>
+        <div id="timer-display" style="display: none;">110:00</div>
+    </header>
+
+    <div class="container">
+        <!-- HALAMAN LOGIN -->
+        <div id="login-section" class="card">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">Identitas Peserta Ujian</h2>
+            <p style="text-align: center; color: var(--danger); font-weight: bold; margin-bottom: 2rem;">PERINGATAN: Selama ujian, Anda tidak diperkenankan keluar dari aplikasi atau menutup tab. Jika melanggar, jawaban akan terkirim otomatis dan Anda harus mengulang dari awal.</p>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="student-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Kelas</label>
+                    <select id="student-class" class="form-control" required>
+                        <option value="">-- Pilih Kelas --</option>
+                        <option value="IX A">IX A</option>
+                        <option value="IX B">IX B</option>
+                        <option value="IX C">IX C</option>
+                        <option value="IX D">IX D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nomor Urut</label>
+                    <input type="number" id="student-number" class="form-control" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Nomor Telepon (Aktif)</label>
+                    <input type="tel" id="student-phone" class="form-control" required pattern="[0-9]{10,14}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="student-email" class="form-control" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">MULAI MENGERJAKAN</button>
+            </form>
+        </div>
+
+        <!-- HALAMAN UJIAN -->
+        <div id="exam-section">
+            <div class="card" id="question-area">
+                <div class="question-header">
+                    <h3 id="q-number-title">Soal No. 1</h3>
+                    <span id="q-type-badge" style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: bold;">Pilihan Ganda</span>
+                </div>
+                <div id="q-text" class="question-text">Memuat soal...</div>
+                <div id="q-options" class="options-container"></div>
+                
+                <div class="bottom-nav">
+                    <button class="btn btn-outline" id="btn-prev" onclick="navigate(-1)">← Sebelumnya</button>
+                    <div>
+                        <button class="btn" id="btn-next" onclick="navigate(1)">Berikutnya →</button>
+                        <button class="btn" id="btn-submit" onclick="showSubmitModal()" style="display: none;">KIRIM JAWABAN</button>
+                        <div id="submit-warning" class="warning-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="sidebar">
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Navigasi Soal</h3>
+                <p id="progress-text" style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Progres: 0/40 soal</p>
+                <div class="nav-grid" id="nav-grid"></div>
+            </div>
+        </div>
+
+        <!-- HALAMAN SUKSES -->
+        <div id="success-section" class="card">
+            <h1 style="color: var(--primary); margin-bottom: 1rem;">JAWABAN BERHASIL DIKIRIM</h1>
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Terima kasih, <strong id="success-name"></strong>.</p>
+            <p>Jawaban Anda telah dicatat oleh sistem.</p>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI -->
+    <div class="modal-overlay" id="submit-modal">
+        <div class="modal-card">
+            <h2 style="margin-bottom: 1rem;">Yakinkah dengan Jawaban?</h2>
+            <p style="color: var(--text-light); margin-bottom: 2rem;">Setelah dikirim, jawaban tidak dapat diubah kembali.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeSubmitModal()">KEMBALI</button>
+                <button class="btn" onclick="finalSubmit(false)" id="btn-final-submit">KIRIM</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * KONFIGURASI URL GOOGLE APPS SCRIPT
+ */
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEKCaxDPW0pyFwXR_f5j_UbI5LwTt1pcWqHfmlluSsGWjVsU8LJKhaKv4zTARWJCuIfQ/exec";
+
+// STATE UJIAN
+let student = {};
+let attempt_id = '';
+let startTime = '';
+let currentQIndex = 0;
+let studentAnswers = {}; 
+let timerInterval;
+let timeLeft = 110 * 60; 
+let isSubmitting = false;
+let isExamActive = false;
+
+// Bank 40 Soal (Disamakan dengan versi sebelumnya, disingkat untuk tampilan kode)
+const rawQuestions = [
+    { id: "KPK-01", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "KPK dari 12 dan 18 adalah...", opsi: ["24", "30", "32", "36"], jawaban: "36" },
+    { id: "FPB-02", tipe: "pilihan_ganda", materi: "FPB", pertanyaan: "FPB dari 24 dan 36 adalah...", opsi: ["6", "8", "12", "18"], jawaban: "12" },
+    { id: "ALG-03", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Bentuk sederhana dari \\(3x+5x-2\\) adalah...", opsi: ["\\(8x-2\\)", "\\(8x+2\\)", "\\(6x-2\\)", "\\(6x+2\\)"], jawaban: "\\(8x-2\\)" },
+    { id: "KPK-04", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "KPK dari 8 dan 12 adalah...", opsi: ["16", "20", "24", "48"], jawaban: "24" },
+    { id: "ALG-05", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Jika \\(x=3\\), maka nilai dari \\(4x-7\\) adalah...", opsi: ["5", "7", "8", "12"], jawaban: "5" },
+    { id: "KPK-06", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "KPK dari 6, 10, dan 15 adalah ....", opsi: ["24", "30", "60", "90"], jawaban: "30" },
+    { id: "FPB-07", tipe: "pilihan_ganda", materi: "FPB", pertanyaan: "FPB dari 48 dan 72 adalah...", opsi: ["12", "18", "20", "24"], jawaban: "24" },
+    { id: "ALG-08", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Hasil dari \\((2a+3b)+(4a-b)\\) adalah ....", opsi: ["\\(6a+4b\\)", "\\(6a-2b\\)", "\\(6a+2b\\)", "\\(8a+2b\\)"], jawaban: "\\(6a+2b\\)" },
+    { id: "KPK-09", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Lampu A berkedip setiap 12 detik, sedangkan lampu B berkedip setiap 18 detik. Jika kedua lampu berkedip bersama-sama sekarang, kedua lampu akan berkedip bersama lagi setelah...", opsi: ["24 detik", "36 detik", "54 detik", "60 detik"], jawaban: "36 detik" },
+    { id: "ALG-10", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Sebuah persegi panjang memiliki panjang \\((x+3)\\) cm dan lebar \\((x-1)\\) cm. Bentuk aljabar untuk keliling persegi panjang tersebut adalah...", opsi: ["\\(4x+4\\)", "\\(4x+8\\)", "\\(2x+4\\)", "\\(2x+2\\)"], jawaban: "\\(4x+4\\)" },
+    { id: "KPK-11", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "KPK dari 24 dan 36 adalah...", opsi: ["36", "48", "60", "72"], jawaban: "72" },
+    { id: "FPB-12", tipe: "pilihan_ganda", materi: "FPB", pertanyaan: "Panitia memiliki 84 pensil merah dan 126 pensil biru. Pensil tersebut akan dimasukkan ke dalam sebanyak-banyaknya paket dengan isi setiap paket sama banyak. Jumlah paket terbanyak yang dapat dibuat adalah...", opsi: ["21", "28", "42", "63"], jawaban: "42" },
+    { id: "ALG-13", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Hasil dari \\(5(2x-3)-2(x+4)\\) adalah...", opsi: ["\\(8x-23\\)", "\\(8x+23\\)", "\\(10x-23\\)", "\\(10x-8\\)"], jawaban: "\\(8x-23\\)" },
+    { id: "KPK-14", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Tiga alarm berbunyi masing-masing setiap 18 detik, 24 detik, dan 30 detik. Jika ketiganya berbunyi bersama-sama sekarang, ketiganya akan berbunyi bersama lagi setelah...", opsi: ["180 detik", "240 detik", "360 detik", "720 detik"], jawaban: "360 detik" },
+    { id: "ALG-15", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Sebuah persegi panjang mempunyai panjang \\((2x+3)\\) cm dan lebar \\((x+1)\\) cm. Jika kelilingnya 32 cm, nilai \\(x\\) adalah...", opsi: ["3", "4", "5", "6"], jawaban: "4" },
+    { id: "KPK-16", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Tentukan bilangan terkecil yang lebih dari 100 dan kurang dari 200 serta habis dibagi 12, 15, dan 18.", opsi: ["120", "150", "180", "210"], jawaban: "180" },
+    { id: "FPB-17", tipe: "pilihan_ganda", materi: "FPB", pertanyaan: "Seorang guru memiliki 96 pensil dan 144 penghapus. Semua benda tersebut akan dibagi ke dalam paket sebanyak-banyaknya dengan isi setiap paket sama. Jumlah paket terbanyak yang dapat dibuat adalah ....", opsi: ["24", "32", "36", "48"], jawaban: "48" },
+    { id: "ALG-18", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Koefisien \\(x\\) dari bentuk aljabar \\(4(2x-3)-3(x+2)\\) adalah...", opsi: ["3", "4", "5", "6"], jawaban: "5" },
+    { id: "KPK-19", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Tentukan bilangan positif terkecil yang habis dibagi 16, 24, dan 36.", opsi: ["72", "144", "192", "288"], jawaban: "144" },
+    { id: "ALG-20", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Sebuah paket A berisi \\(x\\) pensil. Paket B berisi \\((x+3)\\) pensil. Jika 2 paket A dan 3 paket B berisi total 24 pensil, nilai \\(x\\) adalah...", opsi: ["2", "3", "4", "5"], jawaban: "3" },
+    { id: "KPK-21", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Tiga mesin menyelesaikan satu siklus masing-masing setiap 24 detik, 36 detik, dan 54 detik. Jika ketiganya menyelesaikan siklus secara bersamaan, waktu terkecil agar ketiganya kembali bersamaan adalah...", opsi: ["108 detik", "162 detik", "180 detik", "216 detik"], jawaban: "216 detik" },
+    { id: "FPB-22", tipe: "pilihan_ganda", materi: "FPB", pertanyaan: "Sebuah madrasah memiliki 144 buku tulis, 180 pensil, dan 252 penghapus. Semua barang akan dibuat menjadi paket sebanyak-banyaknya dengan isi setiap paket sama. Jumlah paket terbanyak yang dapat dibuat adalah...", opsi: ["24", "30", "36", "72"], jawaban: "36" },
+    { id: "ALG-23", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Diketahui \\(A=3(2x-5)-2(x+4)+7\\) dan \\(B=2x+8\\). Jika \\(A=B\\) nilai \\(x\\) adalah...", opsi: ["8", "10", "12", "14"], jawaban: "12" },
+    { id: "KPK-24", tipe: "pilihan_ganda", materi: "KPK", pertanyaan: "Tiga kegiatan dilakukan berulang masing-masing setiap 16 menit, 24 menit, dan 40 menit. Jika ketiganya dilakukan bersamaan sekarang, ketiganya akan dilakukan bersamaan kembali setelah...", opsi: ["120 menit", "180 menit", "240 menit", "320 menit"], jawaban: "240 menit" },
+    { id: "ALG-25", tipe: "pilihan_ganda", materi: "Aljabar", pertanyaan: "Panjang sebuah persegi panjang adalah \\((2x+5)\\) cm dan lebarnya \\((x-1)\\) cm. Jika luasnya 114 cm², nilai \\(x\\) adalah...", opsi: ["4", "5", "7", "8"], jawaban: "7" },
+    { id: "SPLDV-26", tipe: "pilihan_ganda_kompleks", materi: "SPLDV", pertanyaan: "Perhatikan sistem persamaan berikut:\n\\(2x+y=7\\)\n\\(x-y=2\\)\nPilih semua pernyataan yang benar.", opsi: ["Pasangan \\((3,1)\\) merupakan penyelesaian SPLDV.", "Nilai \\(x=3\\).", "Nilai \\(y=2\\).", "Nilai \\(2x-y=5\\)."], jawaban: ["Pasangan \\((3,1)\\) merupakan penyelesaian SPLDV.", "Nilai \\(x=3\\).", "Nilai \\(2x-y=5\\)."] },
+    { id: "SPLDV-27", tipe: "pilihan_ganda_kompleks", materi: "SPLDV", pertanyaan: "Diketahui:\n\\(x+y=7\\)\n\\(x-y=1\\)\nPilih semua pernyataan yang benar.", opsi: ["\\(x=4\\)", "\\(y=3\\)", "\\(x+y=7\\)", "\\(2x+y=10\\)"], jawaban: ["\\(x=4\\)", "\\(y=3\\)", "\\(x+y=7\\)"] },
+    { id: "SPLDV-28", tipe: "pilihan_ganda_kompleks", materi: "SPLDV", pertanyaan: "Diketahui:\n\\(2x+3y=12\\)\n\\(x+y=5\\)\nPilih semua pernyataan yang benar.", opsi: ["\\(x=3\\) dan \\(y=2\\)", "\\(x+y=5\\)", "\\(2x+3y=10\\)", "\\(x-y=1\\)"], jawaban: ["\\(x=3\\) dan \\(y=2\\)", "\\(x+y=5\\)", "\\(x-y=1\\)"] },
+    { id: "SPLDV-29", tipe: "pilihan_ganda_kompleks", materi: "SPLDV", pertanyaan: "Diketahui:\n\\(2x+y=13\\)\n\\(x+2y=11\\)\nPilih semua pernyataan yang benar.", opsi: ["\\(x=5\\)", "\\(y=3\\)", "\\(x+y=9\\)", "\\(x-y=2\\)"], jawaban: ["\\(x=5\\)", "\\(y=3\\)", "\\(x-y=2\\)"] },
+    { id: "SPLDV-30", tipe: "pilihan_ganda_kompleks", materi: "SPLDV", pertanyaan: "Sebuah kantin menjual roti dan susu. 3 roti dan 2 susu berharga Rp24.000. 2 roti dan 3 susu berharga Rp21.000. Misalkan \\(x\\) adalah harga satu roti dalam ribuan rupiah dan \\(y\\) adalah harga satu susu dalam ribuan rupiah. Pilih semua pernyataan yang benar.", opsi: ["\\(x=6\\)", "\\(y=3\\)", "\\(x+y=9\\)", "\\(2x+3y=24\\)", "\\(3x+2y=24\\)"], jawaban: ["\\(x=6\\)", "\\(y=3\\)", "\\(x+y=9\\)", "\\(3x+2y=24\\)"] },
+    { id: "FPB-31", tipe: "benar_salah", materi: "FPB", pertanyaan: "FPB dari 42 dan 56 adalah 14.", opsi: ["Benar", "Salah"], jawaban: "Benar" },
+    { id: "FPB-32", tipe: "benar_salah", materi: "FPB", pertanyaan: "FPB dari 75 dan 105 adalah 15.", opsi: ["Benar", "Salah"], jawaban: "Benar" },
+    { id: "FPB-33", tipe: "benar_salah", materi: "FPB", pertanyaan: "FPB dari 72, 108, dan 180 adalah 18.", opsi: ["Benar", "Salah"], jawaban: "Salah" },
+    { id: "FPB-34", tipe: "benar_salah", materi: "FPB", pertanyaan: "FPB dari 84, 126, dan 210 adalah 42.", opsi: ["Benar", "Salah"], jawaban: "Benar" },
+    { id: "FPB-35", tipe: "benar_salah", materi: "FPB", pertanyaan: "FPB dari 168, 252, dan 360 adalah 18.", opsi: ["Benar", "Salah"], jawaban: "Salah" },
+    { id: "SPLDV-36", tipe: "menjodohkan", materi: "SPLDV", pertanyaan: "Jodohkan sistem persamaan berikut dengan penyelesaiannya.", pasangan: ["\\(2x+y=8\\) dan \\(x+y=5\\)", "\\(x-y=1\\) dan \\(x+y=7\\)", "\\(3x+y=10\\) dan \\(x+y=6\\)", "\\(2x-y=1\\) dan \\(x+y=5\\)"], opsi_jawaban: ["\\((3,2)\\)", "\\((4,3)\\)", "\\((2,4)\\)", "\\((2,3)\\)"] },
+    { id: "SPLDV-37", tipe: "menjodohkan", materi: "SPLDV", pertanyaan: "Jodohkan sistem persamaan berikut dengan penyelesaiannya.", pasangan: ["\\(2x+y=9\\) dan \\(x+y=6\\)", "\\(x-y=4\\) dan \\(x+y=10\\)", "\\(3x+y=11\\) dan \\(x+y=7\\)", "\\(2x-y=4\\) dan \\(x+y=5\\)"], opsi_jawaban: ["\\((3,3)\\)", "\\((7,3)\\)", "\\((2,5)\\)", "\\((3,2)\\)"] },
+    { id: "SPLDV-38", tipe: "menjodohkan", materi: "SPLDV", pertanyaan: "Jodohkan sistem persamaan berikut dengan penyelesaian yang tepat.", pasangan: ["\\(x+y=9\\) dan \\(x-y=3\\)", "\\(2x+y=11\\) dan \\(x+y=7\\)", "\\(x+2y=8\\) dan \\(x-y=2\\)", "\\(3x+y=13\\) dan \\(x+y=7\\)"], opsi_jawaban: ["\\((6,3)\\)", "\\((4,3)\\)", "\\((4,2)\\)", "\\((3,4)\\)"] },
+    { id: "SPLDV-39", tipe: "menjodohkan", materi: "SPLDV", pertanyaan: "Jodohkan sistem persamaan berikut dengan penyelesaian yang tepat.", pasangan: ["\\(x+y=10\\) dan \\(x-y=2\\)", "\\(2x+y=14\\) dan \\(x+y=9\\)", "\\(x+2y=11\\) dan \\(x-y=2\\)", "\\(3x+y=15\\) dan \\(x+y=7\\)"], opsi_jawaban: ["\\((6,4)\\)", "\\((5,4)\\)", "\\((5,3)\\)", "\\((4,3)\\)"] },
+    { id: "SPLDV-40", tipe: "menjodohkan", materi: "SPLDV", pertanyaan: "Jodohkan sistem persamaan berikut dengan penyelesaiannya.", pasangan: ["\\(3x+2y=19\\) dan \\(x-y=3\\)", "\\(2x+3y=17\\) dan \\(x+2y=10\\)", "\\(4x-y=14\\) dan \\(x+y=11\\)", "\\(2x+y=13\\) dan \\(3x-y=17\\)"], opsi_jawaban: ["\\((5,2)\\)", "\\((4,3)\\)", "\\((5,6)\\)", "\\((6,1)\\)"] }
+];
+
+let examQuestions = [];
+
+function shuffleArray(array) {
+    let curId = array.length;
+    while (0 !== curId) {
+        let randId = Math.floor(Math.random() * curId);
+        curId -= 1;
+        let tmp = array[curId];
+        array[curId] = array[randId];
+        array[randId] = tmp;
+    }
+    return array;
+}
+
+// Fitur Anti-Curang (Mendeteksi Pindah Aplikasi/Tab)
+document.addEventListener("visibilitychange", handleCheat);
+window.addEventListener("blur", handleCheat);
+
+function handleCheat() {
+    if (isExamActive && !isSubmitting && (document.hidden || !document.hasFocus())) {
+        isSubmitting = true; // Kunci agar tidak loop
+        alert("PELANGGARAN TERDETEKSI!\nAnda keluar dari halaman ujian atau membuka aplikasi lain. Jawaban Anda otomatis dikirim dan Anda akan dikembalikan ke awal.");
+        
+        finalSubmit(true).then(() => {
+            window.location.reload(); // Mengulang dari awal
+        });
+    }
+}
+
+// Mencegah Tombol Back
+window.history.pushState(null, null, window.location.href);
+window.onpopstate = function () {
+    window.history.go(1);
+};
+
+// Mencegah Refresh (Peringatan)
+window.onbeforeunload = function(e) {
+    if(isExamActive && !isSubmitting) {
+        e.returnValue = "Ujian sedang berlangsung. Yakin ingin keluar?";
+        return "Ujian sedang berlangsung. Yakin ingin keluar?";
+    }
+};
+
+// Mengaktifkan Fullscreen saat ujian mulai
+function requestFullScreen() {
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen(); } 
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
+    else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+}
+
+document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    student = {
+        nama: document.getElementById('student-name').value,
+        kelas: document.getElementById('student-class').value,
+        no_urut: document.getElementById('student-number').value,
+        telepon: document.getElementById('student-phone').value,
+        email: document.getElementById('student-email').value
+    };
+    attempt_id = 'ASTS9-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    startTime = new Date().toISOString();
+    examQuestions = shuffleArray([...rawQuestions]);
+    
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('exam-section').style.display = 'grid';
+    document.getElementById('timer-display').style.display = 'block';
+    
+    isExamActive = true;
+    requestFullScreen(); // Memaksa fullscreen
+    
+    buildNavigation();
+    renderQuestion(0);
+    startTimer();
+});
+
+function buildNavigation() {
+    const grid = document.getElementById('nav-grid');
+    grid.innerHTML = '';
+    examQuestions.forEach((q, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.id = 'nav-' + index;
+        btn.innerText = index + 1;
+        btn.onclick = () => renderQuestion(index);
+        grid.appendChild(btn);
+    });
+}
+
+function renderQuestion(index) {
+    currentQIndex = index;
+    const q = examQuestions[index];
+    document.getElementById('q-number-title').innerText = `Soal No. ${index + 1}`;
+    
+    let badgeText = "";
+    if(q.tipe === 'pilihan_ganda') badgeText = "Pilihan Ganda";
+    if(q.tipe === 'pilihan_ganda_kompleks') badgeText = "Pilihan Ganda Kompleks (Pilih lebih dari satu)";
+    if(q.tipe === 'benar_salah') badgeText = "Benar / Salah";
+    if(q.tipe === 'menjodohkan') badgeText = "Menjodohkan";
+    document.getElementById('q-type-badge').innerText = badgeText;
+    
+    document.getElementById('q-text').innerHTML = q.pertanyaan.replace(/\n/g, '<br>');
+    const optionsContainer = document.getElementById('q-options');
+    optionsContainer.innerHTML = '';
+
+    if (q.tipe === 'pilihan_ganda' || q.tipe === 'benar_salah') {
+        q.opsi.forEach(opt => {
+            const label = document.createElement('label');
+            label.className = 'option-label';
+            const isChecked = studentAnswers[q.id] === opt;
+            if(isChecked) label.classList.add('selected');
+            
+            // PERBAIKAN: Menambahkan parameter "this" agar update CSS dilakukan langsung tanpa me-render ulang
+            label.innerHTML = `
+                <input type="radio" name="ans-${q.id}" value="${opt}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.id}', '${opt}', this)">
+                <span>${opt}</span>
+            `;
+            optionsContainer.appendChild(label);
+        });
+    } 
+    else if (q.tipe === 'pilihan_ganda_kompleks') {
+        let savedAnswers = studentAnswers[q.id] || [];
+        q.opsi.forEach(opt => {
+            const label = document.createElement('label');
+            label.className = 'option-label';
+            const isChecked = savedAnswers.includes(opt);
+            if(isChecked) label.classList.add('selected');
+            
+            // PERBAIKAN: DOM Update dinamis tanpa merender ulang
+            label.innerHTML = `
+                <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} onchange="saveComplexAnswer('${q.id}', '${opt}', this.checked, this)">
+                <span>${opt}</span>
+            `;
+            optionsContainer.appendChild(label);
+        });
+    }
+    else if (q.tipe === 'menjodohkan') {
+        let savedMatches = studentAnswers[q.id] || {};
+        q.pasangan.forEach((pasanganItem, i) => {
+            const row = document.createElement('div');
+            row.className = 'matching-row';
+            let selectHtml = `<select onchange="saveMatchingAnswer('${q.id}', ${i}, this.value)">
+                <option value="">-- Pilih Pasangan --</option>`;
+            q.opsi_jawaban.forEach(opt => {
+                let isSelected = savedMatches[i] === opt ? 'selected' : '';
+                selectHtml += `<option value="${opt}" ${isSelected}>${opt}</option>`;
+            });
+            selectHtml += `</select>`;
+            row.innerHTML = `<div>${pasanganItem}</div>${selectHtml}`;
+            optionsContainer.appendChild(row);
+        });
+    }
+
+    renderMathInElement(document.getElementById('question-area'), {
+        delimiters: [ {left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false} ],
+        throwOnError: false
+    });
+    updateNavUI();
+}
+
+// PERBAIKAN FUNGSI SAVE: Update CSS langsung ke elemen yang diklik (Tidak ada flicker/lag)
+function saveAnswer(qId, answer, element) {
+    studentAnswers[qId] = answer;
+    
+    // Hapus kelas 'selected' dari semua opsi di soal ini
+    let siblings = element.closest('.options-container').querySelectorAll('.option-label');
+    siblings.forEach(el => el.classList.remove('selected'));
+    
+    // Tambahkan kelas 'selected' hanya pada yang diklik
+    element.closest('.option-label').classList.add('selected');
+    updateNavUI();
+}
+
+function saveComplexAnswer(qId, answer, isChecked, element) {
+    if (!studentAnswers[qId]) studentAnswers[qId] = [];
+    
+    if (isChecked) {
+        studentAnswers[qId].push(answer);
+        element.closest('.option-label').classList.add('selected');
+    } else {
+        studentAnswers[qId] = studentAnswers[qId].filter(a => a !== answer);
+        element.closest('.option-label').classList.remove('selected');
+    }
+    
+    if(studentAnswers[qId].length === 0) delete studentAnswers[qId];
+    updateNavUI();
+}
+
+function saveMatchingAnswer(qId, index, answer) {
+    if (!studentAnswers[qId]) studentAnswers[qId] = {};
+    if (answer === "") {
+        delete studentAnswers[qId][index];
+    } else {
+        studentAnswers[qId][index] = answer;
+    }
+    
+    let allAnswered = true;
+    let qData = examQuestions.find(q => q.id === qId);
+    for(let i = 0; i < qData.pasangan.length; i++) {
+        if(!studentAnswers[qId][i]) allAnswered = false;
+    }
+    
+    if(Object.keys(studentAnswers[qId]).length === 0) {
+        delete studentAnswers[qId];
+    } else if (!allAnswered) {
+        studentAnswers[qId]._complete = false;
+    } else {
+        studentAnswers[qId]._complete = true;
+    }
+    updateNavUI();
+}
+
+function navigate(dir) {
+    let newIndex = currentQIndex + dir;
+    if (newIndex >= 0 && newIndex < examQuestions.length) { renderQuestion(newIndex); }
+}
+
+function updateNavUI() {
+    let answeredCount = 0;
+    examQuestions.forEach((q, index) => {
+        const btn = document.getElementById('nav-' + index);
+        let isAnswered = false;
+        
+        if(q.tipe === 'menjodohkan') {
+            isAnswered = studentAnswers[q.id] && studentAnswers[q.id]._complete === true;
+        } else {
+            isAnswered = studentAnswers[q.id] !== undefined;
+        }
+
+        if (isAnswered) {
+            btn.classList.add('answered');
+            answeredCount++;
+        } else {
+            btn.classList.remove('answered');
+        }
+
+        if (index === currentQIndex) { btn.classList.add('active'); } 
+        else { btn.classList.remove('active'); }
+    });
+
+    document.getElementById('progress-text').innerText = `Progres: ${answeredCount}/${examQuestions.length} soal`;
+    document.getElementById('btn-prev').disabled = currentQIndex === 0;
+    
+    const btnNext = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+    const warningText = document.getElementById('submit-warning');
+
+    if (currentQIndex === examQuestions.length - 1) {
+        btnNext.style.display = 'none';
+        btnSubmit.style.display = 'inline-block';
+        if (answeredCount === examQuestions.length) {
+            btnSubmit.disabled = false;
+            warningText.style.display = 'none';
+        } else {
+            btnSubmit.disabled = true;
+            let unanswered = [];
+            examQuestions.forEach((q, i) => {
+                let ans = studentAnswers[q.id];
+                if(q.tipe === 'menjodohkan' && (!ans || !ans._complete)) unanswered.push(i+1);
+                else if(q.tipe !== 'menjodohkan' && !ans) unanswered.push(i+1);
+            });
+            warningText.innerText = `Ada soal belum dijawab: ${unanswered.join(', ')}`;
+            warningText.style.display = 'block';
+        }
+    } else {
+        btnNext.style.display = 'inline-block';
+        btnSubmit.style.display = 'none';
+        warningText.style.display = 'none';
+    }
+}
+
+function startTimer() {
+    const display = document.getElementById('timer-display');
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        let h = Math.floor(timeLeft / 3600);
+        let m = Math.floor((timeLeft % 3600) / 60);
+        let s = timeLeft % 60;
+        let timeString = (h > 0 ? (h < 10 ? "0"+h : h) + ":" : "") + (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
+        display.innerText = "Sisa Waktu: " + timeString;
+        
+        if(timeLeft <= 900) display.classList.add('timer-warning');
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            display.innerText = "WAKTU HABIS";
+            alert("Waktu habis. Jawaban akan dikirim otomatis.");
+            finalSubmit(true);
+        }
+    }, 1000);
+}
+
+function showSubmitModal() { document.getElementById('submit-modal').style.display = 'flex'; }
+function closeSubmitModal() { if(!isSubmitting) document.getElementById('submit-modal').style.display = 'none'; }
+
+async function finalSubmit(isAuto = false) {
+    isSubmitting = true; 
+    isExamActive = false; // Matikan mode ujian agar page bisa reload
+    clearInterval(timerInterval);
+    
+    if(!isAuto) {
+        document.getElementById('btn-final-submit').innerText = 'MENGIRIM...';
+        document.getElementById('btn-final-submit').disabled = true;
+    }
+    
+    const payload = {
+        attempt_id: attempt_id,
+        nama: student.nama,
+        kelas: student.kelas,
+        no_urut: student.no_urut,
+        telepon: student.telepon,
+        email: student.email,
+        waktu_mulai: startTime,
+        waktu_selesai: new Date().toISOString(),
+        durasi: (110 * 60) - Math.max(0, timeLeft), 
+        jawaban: studentAnswers
+    };
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if(!isAuto) showSuccessPage();
+        
+    } catch (error) {
+        if(!isAuto) {
+            alert("Jawaban belum berhasil dikirim. Periksa koneksi internet.");
+            document.getElementById('btn-final-submit').innerText = 'KIRIM';
+            document.getElementById('btn-final-submit').disabled = false;
+            isSubmitting = false;
+            isExamActive = true;
+        }
+    }
+}
+
+function showSuccessPage() {
+    // Exit fullscreen
+    if (document.exitFullscreen) { document.exitFullscreen(); }
+    
+    document.getElementById('submit-modal').style.display = 'none';
+    document.getElementById('exam-section').style.display = 'none';
+    document.getElementById('timer-display').style.display = 'none';
+    document.getElementById('success-name').innerText = student.nama;
+    document.getElementById('success-section').style.display = 'block';
+}
+</script>
+</body>
+</html>
